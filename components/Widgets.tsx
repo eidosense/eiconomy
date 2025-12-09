@@ -1,10 +1,12 @@
+
 import React, { useState } from 'react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   BarChart, Bar, Cell 
 } from 'recharts';
-import { MallTrafficData, Transaction, Sector, TransportMetric, MicroTrend } from '../types';
+import { MallTrafficData, Transaction, Sector, TransportMetric, MicroTrend, Currency, NewsAlert, NewsCategory } from '../types';
 import { Translation } from '../services/translations';
+import { EXCHANGE_RATES } from '../services/mockDataService';
 
 // --- Types ---
 interface StatCardProps {
@@ -101,10 +103,12 @@ interface POSCategoryChartProps {
 
 export const POSCategoryChart: React.FC<POSCategoryChartProps> = ({ transactions, t }) => {
   const [viewMode, setViewMode] = useState<'sector' | 'location'>('sector');
+  const [metricMode, setMetricMode] = useState<'volume' | 'count'>('volume');
 
   const dataMap = transactions.reduce((acc, curr) => {
     const key = viewMode === 'sector' ? curr.sector : curr.location;
-    acc[key] = (acc[key] || 0) + curr.amount;
+    const val = metricMode === 'volume' ? curr.amount : 1;
+    acc[key] = (acc[key] || 0) + val;
     return acc;
   }, {} as Record<string, number>);
 
@@ -140,19 +144,37 @@ export const POSCategoryChart: React.FC<POSCategoryChartProps> = ({ transactions
 
   return (
     <div className="h-full flex flex-col relative">
-      <div className="absolute top-[-3.5rem] right-0 flex bg-slate-800/50 rounded-lg p-1 border border-slate-700/50">
-           <button 
-             onClick={() => setViewMode('sector')}
-             className={`px-2 py-0.5 text-[10px] uppercase font-bold rounded transition-colors ${viewMode === 'sector' ? 'bg-indigo-500 text-white' : 'text-slate-400 hover:text-white'}`}
-           >
-             {t.widget.viewSector}
-           </button>
-           <button 
-             onClick={() => setViewMode('location')}
-             className={`px-2 py-0.5 text-[10px] uppercase font-bold rounded transition-colors ${viewMode === 'location' ? 'bg-indigo-500 text-white' : 'text-slate-400 hover:text-white'}`}
-           >
-             {t.widget.viewLocation}
-           </button>
+      <div className="absolute top-[-3.5rem] right-0 flex flex-col items-end gap-1.5 z-10">
+           {/* Row 1: View Mode */}
+           <div className="flex bg-slate-800/50 rounded-lg p-1 border border-slate-700/50 shadow-sm">
+               <button 
+                 onClick={() => setViewMode('sector')}
+                 className={`px-2 py-0.5 text-[10px] uppercase font-bold rounded transition-colors ${viewMode === 'sector' ? 'bg-indigo-500 text-white' : 'text-slate-400 hover:text-white'}`}
+               >
+                 {t.widget.viewSector}
+               </button>
+               <button 
+                 onClick={() => setViewMode('location')}
+                 className={`px-2 py-0.5 text-[10px] uppercase font-bold rounded transition-colors ${viewMode === 'location' ? 'bg-indigo-500 text-white' : 'text-slate-400 hover:text-white'}`}
+               >
+                 {t.widget.viewLocation}
+               </button>
+           </div>
+           {/* Row 2: Metric Mode */}
+           <div className="flex bg-slate-800/50 rounded-lg p-1 border border-slate-700/50 shadow-sm">
+               <button 
+                 onClick={() => setMetricMode('volume')}
+                 className={`px-2 py-0.5 text-[10px] uppercase font-bold rounded transition-colors ${metricMode === 'volume' ? 'bg-emerald-500 text-white' : 'text-slate-400 hover:text-white'}`}
+               >
+                 {t.widget.metricVolume}
+               </button>
+               <button 
+                 onClick={() => setMetricMode('count')}
+                 className={`px-2 py-0.5 text-[10px] uppercase font-bold rounded transition-colors ${metricMode === 'count' ? 'bg-emerald-500 text-white' : 'text-slate-400 hover:text-white'}`}
+               >
+                 {t.widget.metricCount}
+               </button>
+           </div>
       </div>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} layout="vertical" margin={{ left: 5, right: 20 }}>
@@ -170,7 +192,10 @@ export const POSCategoryChart: React.FC<POSCategoryChartProps> = ({ transactions
           <Tooltip 
              cursor={{fill: 'transparent'}}
              contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', color: '#f8fafc' }}
-             formatter={(value: number) => [`€${value.toLocaleString()}`, 'Volume']}
+             formatter={(value: number) => [
+                 metricMode === 'volume' ? `€${value.toLocaleString()}` : value.toString(), 
+                 metricMode === 'volume' ? 'Volume' : 'Tx Count'
+             ]}
           />
           <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={24}>
               {data.map((entry, index) => (
@@ -245,6 +270,193 @@ export const IndulgenceTicker: React.FC<IndulgenceTickerProps> = ({ trends, t })
                 </div>
             ))}
              {display.length === 0 && <div className="col-span-2 text-slate-600 text-xs italic flex items-center justify-center">{t.widget.tracking}</div>}
+        </div>
+    );
+};
+
+interface ForexMarqueeProps {
+    t: Translation;
+}
+
+export const ForexMarquee: React.FC<ForexMarqueeProps> = ({ t }) => {
+    return (
+        <div className="w-full bg-slate-900 border-y border-slate-800 h-8 flex items-center overflow-hidden relative">
+            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-slate-900 to-transparent z-10"></div>
+            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-slate-900 to-transparent z-10"></div>
+            
+            <div className="flex items-center gap-2 px-3 shrink-0 z-20 bg-slate-900 border-r border-slate-800 h-full">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider whitespace-nowrap">{t.forex}</span>
+            </div>
+
+            <div className="flex animate-marquee whitespace-nowrap items-center text-xs font-mono">
+                {/* Duplicate the items to ensure seamless loop */}
+                {[...Object.entries(EXCHANGE_RATES), ...Object.entries(EXCHANGE_RATES)].map(([curr, rate], idx) => (
+                    <div key={`${curr}-${idx}`} className="flex items-center mx-4 gap-2">
+                        <span className="text-slate-400">EUR/{curr}</span>
+                        <span className="text-slate-200 font-bold">{rate.toFixed(2)}</span>
+                        <span className={`text-[10px] ${Math.random() > 0.5 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                            {Math.random() > 0.5 ? '▲' : '▼'}
+                        </span>
+                    </div>
+                ))}
+            </div>
+            
+            <style dangerouslySetInnerHTML={{__html: `
+                @keyframes marquee {
+                    0% { transform: translateX(0); }
+                    100% { transform: translateX(-50%); }
+                }
+                .animate-marquee {
+                    animation: marquee 20s linear infinite;
+                }
+            `}} />
+        </div>
+    );
+};
+
+interface CurrencyConverterModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    t: Translation;
+}
+
+export const CurrencyConverterModal: React.FC<CurrencyConverterModalProps> = ({ isOpen, onClose, t }) => {
+    const [amount, setAmount] = useState<string>('');
+    const [currency, setCurrency] = useState<string>('USD');
+    const [result, setResult] = useState<number | null>(null);
+
+    if (!isOpen) return null;
+
+    const handleConvert = () => {
+        const val = parseFloat(amount);
+        if (isNaN(val)) return;
+
+        // Exchange rates are 1 EUR = X Foreign
+        // So Foreign / Rate = EUR
+        const rate = EXCHANGE_RATES[currency as Exclude<Currency, 'EUR'>];
+        if (rate) {
+            setResult(val / rate);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in zoom-in duration-200">
+            <div className="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-xl shadow-2xl overflow-hidden">
+                <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950">
+                    <h3 className="font-bold text-white flex items-center gap-2">
+                        <svg className="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        {t.converter.title}
+                    </h3>
+                    <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div className="p-6 space-y-4">
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{t.converter.from}</label>
+                        <select 
+                            value={currency}
+                            onChange={(e) => { setCurrency(e.target.value); setResult(null); }}
+                            className="w-full bg-slate-950 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                        >
+                            {Object.keys(EXCHANGE_RATES).map(c => (
+                                <option key={c} value={c}>{c}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">{t.converter.amount}</label>
+                        <div className="relative">
+                             <input 
+                                type="number" 
+                                value={amount}
+                                onChange={(e) => { setAmount(e.target.value); setResult(null); }}
+                                className="w-full bg-slate-950 border border-slate-700 text-white rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                                placeholder="0.00"
+                            />
+                            <div className="absolute right-3 top-2 text-slate-500 text-xs font-bold pointer-events-none">{currency}</div>
+                        </div>
+                    </div>
+                    
+                    <button 
+                        onClick={handleConvert}
+                        className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-lg transition-colors text-sm shadow-lg shadow-indigo-900/20"
+                    >
+                        {t.converter.convert}
+                    </button>
+
+                    {result !== null && (
+                        <div className="mt-4 p-4 bg-emerald-900/20 border border-emerald-500/30 rounded-lg text-center animate-in fade-in slide-in-from-bottom-2">
+                             <div className="text-xs text-emerald-400 uppercase font-bold mb-1">{t.converter.result}</div>
+                             <div className="text-3xl font-mono font-bold text-white">€{result.toFixed(2)}</div>
+                             <div className="text-[10px] text-slate-500 mt-1">1 EUR = {EXCHANGE_RATES[currency as Exclude<Currency, 'EUR'>].toFixed(2)} {currency}</div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+interface SummitAlertsWidgetProps {
+    alerts: NewsAlert[];
+    t: Translation;
+}
+
+export const SummitAlertsWidget: React.FC<SummitAlertsWidgetProps> = ({ alerts, t }) => {
+    // Helper to format "2h ago"
+    const timeAgo = (ts: number) => {
+        const diff = Date.now() - ts;
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const mins = Math.floor(diff / (1000 * 60));
+        if (hours >= 24) return `${Math.floor(hours / 24)}d ago`;
+        if (hours > 0) return `${hours}h ago`;
+        if (mins > 0) return `${mins}m ago`;
+        return 'Just now';
+    };
+
+    const getCatColor = (cat: NewsCategory) => {
+        switch(cat) {
+            case 'Policy': return 'bg-blue-900/50 text-blue-300 border-blue-500/30';
+            case 'Market': return 'bg-emerald-900/50 text-emerald-300 border-emerald-500/30';
+            case 'Energy': return 'bg-amber-900/50 text-amber-300 border-amber-500/30';
+            case 'Infrastructure': return 'bg-purple-900/50 text-purple-300 border-purple-500/30';
+            default: return 'bg-slate-800 text-slate-400';
+        }
+    };
+
+    return (
+        <div className="bg-slate-900/50 border border-slate-800 rounded-xl flex flex-col h-full overflow-hidden">
+            <div className="p-4 border-b border-slate-800/50 flex justify-between items-center bg-slate-900/80">
+                <div>
+                    <h3 className="text-sm font-bold text-slate-200 uppercase tracking-widest flex items-center gap-2">
+                        <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                        {t.summit.title}
+                    </h3>
+                    <p className="text-[10px] text-slate-500 uppercase">{t.summit.subtitle}</p>
+                </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-2 space-y-2">
+                {alerts.map(alert => (
+                    <div key={alert.id} className="p-3 rounded bg-slate-950/40 border-l-2 border-slate-700 hover:bg-slate-800/40 transition-colors group">
+                        <div className="flex justify-between items-start mb-1">
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded border font-bold uppercase ${getCatColor(alert.category)}`}>
+                                {alert.category}
+                            </span>
+                            <span className="text-[10px] text-slate-500 font-mono">{timeAgo(alert.timestamp)}</span>
+                        </div>
+                        <h4 className="text-sm font-medium text-slate-200 group-hover:text-white leading-snug">{alert.headline}</h4>
+                        <div className="mt-1 flex items-center gap-1 text-[10px] text-slate-500 uppercase">
+                             <span>• {alert.source}</span>
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 };

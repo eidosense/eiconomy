@@ -1,3 +1,4 @@
+
 export enum Sector {
   RETAIL = 'Retail',
   FMCG = 'FMCG',
@@ -5,12 +6,16 @@ export enum Sector {
   DINING = 'Dining'
 }
 
+export type Currency = 'EUR' | 'USD' | 'GBP' | 'RUB' | 'RSD' | 'TRY';
+
 export interface Transaction {
   id: string;
   timestamp: number;
-  amount: number;
+  amount: number; // EUR amount
   sector: Sector;
   location: string;
+  originalCurrency: Currency;
+  originalAmount: number;
 }
 
 export interface MallTrafficData {
@@ -49,6 +54,42 @@ export interface MicroTrend {
   velocity: number; // units per minute
   trend: 'Spiking' | 'Stable' | 'Dropping';
   timestamp: number;
+}
+
+// Macro Economic Indicators (EU Exports, FDI, etc)
+export interface MacroMetric {
+  id: string;
+  label: string; // "EU Export Volume"
+  value: string; // "€42.5M"
+  delta: string; // "+12.4%"
+  context: string; // "Peak", "North", "Stable"
+  timestamp: number;
+}
+
+// X-Ray Deep Signals
+export type SignalCategory = 'MARKET' | 'SOCIAL' | 'REAL_ESTATE' | 'DIGITAL' | 'TALENT';
+
+export interface DeepSignal {
+  id: string;
+  category: SignalCategory;
+  title: string; // e.g. "Ad Auction Heatmap"
+  subTitle: string; // e.g. "CPM"
+  value: string; // e.g. "€3.99"
+  delta: string; // e.g. "+3.0%"
+  sentiment: 'positive' | 'negative' | 'neutral';
+  details: string; // e.g. "High Demand"
+  timestamp: number;
+}
+
+// Summit Alerts (Geopolitics / Macro)
+export type NewsCategory = 'Policy' | 'Market' | 'Infrastructure' | 'Energy';
+
+export interface NewsAlert {
+    id: string;
+    headline: string;
+    source: string; // e.g. "Brussels", "Global Markets"
+    timestamp: number;
+    category: NewsCategory;
 }
 
 export interface PosMetric {

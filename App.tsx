@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { generateTransaction, generateFlight, generateInitialMallTraffic, generateTransportMetric, generateMicroTrend } from './services/mockDataService';
+import { generateTransaction, generateFlight, generateInitialMallTraffic, generateTransportMetric, generateMicroTrend, generateDeepSignal, generateNewsAlert, INITIAL_NEWS, generateMacroMetric } from './services/mockDataService';
 import { analyzeEconomicPulse } from './services/geminiService';
-import { Transaction, FlightData, MallTrafficData, TransportMetric, MicroTrend, AnalysisState } from './types';
-import { StatCard, ChartContainer, MallTrafficChart, POSCategoryChart, MobilityHeatmap, IndulgenceTicker } from './components/Widgets';
-import { LiveFeed, GlobalStreamView, LogisticsMonitor } from './components/LiveFeed';
+import { Transaction, FlightData, MallTrafficData, TransportMetric, MicroTrend, AnalysisState, DeepSignal, NewsAlert, MacroMetric } from './types';
+import { StatCard, ChartContainer, MallTrafficChart, POSCategoryChart, MobilityHeatmap, IndulgenceTicker, ForexMarquee, CurrencyConverterModal, SummitAlertsWidget } from './components/Widgets';
+import { LiveFeed, GlobalStreamView, LogisticsMonitor, RawDataView, XRayView } from './components/LiveFeed';
 import { translations, Language } from './services/translations';
 
 // Icons
@@ -48,6 +48,22 @@ const TruckIcon = () => (
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 012-2v0a2 2 0 012 2m0 0a2 2 0 012-2v0a2 2 0 012 2" />
     </svg>
 );
+const DatabaseIcon = () => (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+    </svg>
+);
+const CalculatorIcon = () => (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+    </svg>
+);
+const EyeIcon = () => (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+    </svg>
+);
 
 
 const App: React.FC = () => {
@@ -56,16 +72,19 @@ const App: React.FC = () => {
   const t = translations[lang];
 
   // View State
-  const [currentView, setCurrentView] = useState<'dashboard' | 'stream' | 'logistics'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'stream' | 'logistics' | 'raw' | 'xray'>('dashboard');
+  const [showConverterModal, setShowConverterModal] = useState(false);
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [flights, setFlights] = useState<FlightData[]>([]);
   const [mallTraffic, setMallTraffic] = useState<MallTrafficData[]>(generateInitialMallTraffic());
   const [transportData, setTransportData] = useState<TransportMetric[]>([]);
   const [microTrends, setMicroTrends] = useState<MicroTrend[]>([]);
+  const [deepSignals, setDeepSignals] = useState<DeepSignal[]>([]);
+  const [newsAlerts, setNewsAlerts] = useState<NewsAlert[]>(INITIAL_NEWS);
   
   // Feed combines all types
-  const [feedItems, setFeedItems] = useState<(Transaction | FlightData | TransportMetric | MicroTrend)[]>([]);
+  const [feedItems, setFeedItems] = useState<(Transaction | FlightData | TransportMetric | MicroTrend | MacroMetric)[]>([]);
   
   const [analysis, setAnalysis] = useState<AnalysisState>({ loading: false, text: null, timestamp: null });
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
@@ -82,6 +101,9 @@ const App: React.FC = () => {
       // 2. Deep Layer Data
       const newTransport = Math.random() > 0.6 ? generateTransportMetric() : null;
       const newMicroTrend = Math.random() > 0.5 ? generateMicroTrend() : null;
+      const newDeepSignal = Math.random() > 0.7 ? generateDeepSignal() : null;
+      const newNews = Math.random() > 0.95 ? generateNewsAlert() : null;
+      const newMacro = Math.random() > 0.8 ? generateMacroMetric() : null;
 
       // 3. Update States
       setTransactions(prev => [newTx, ...prev].slice(0, 50));
@@ -104,6 +126,18 @@ const App: React.FC = () => {
               return [newMicroTrend, ...filtered].slice(0, 20);
           });
           newFeedItems.push(newMicroTrend);
+      }
+
+      if (newMacro) {
+          newFeedItems.push(newMacro);
+      }
+
+      if (newDeepSignal) {
+          setDeepSignals(prev => [newDeepSignal, ...prev].slice(0, 30));
+      }
+
+      if (newNews) {
+          setNewsAlerts(prev => [newNews, ...prev].slice(0, 20));
       }
 
       setFeedItems(prev => [...newFeedItems, ...prev].slice(0, 200));
@@ -180,6 +214,32 @@ const App: React.FC = () => {
                 <span className="uppercase">Global Stream</span>
              </button>
 
+             <button
+                onClick={() => setCurrentView('raw')}
+                className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${currentView === 'raw' ? 'bg-indigo-900/50 border-indigo-500 text-indigo-300' : 'border-slate-700 hover:border-slate-500 text-slate-400'}`}
+             >
+                <DatabaseIcon />
+                <span className="uppercase">Raw Data</span>
+             </button>
+
+             {/* X-Ray Button */}
+             <button
+                onClick={() => setCurrentView('xray')}
+                className={`p-2 rounded-lg transition-colors border ${currentView === 'xray' ? 'bg-purple-900/50 border-purple-500 text-purple-300' : 'border-transparent hover:bg-slate-800 text-slate-400 hover:text-white'}`}
+                title="Deep Signal X-Ray"
+             >
+                <EyeIcon />
+             </button>
+
+             {/* Currency Converter Button */}
+             <button
+                onClick={() => setShowConverterModal(true)}
+                className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors border border-transparent hover:border-slate-700"
+                title={t.converter.title}
+             >
+                <CalculatorIcon />
+             </button>
+
             {/* Language Toggle */}
             <div className="flex bg-slate-800 rounded-lg p-1 border border-slate-700">
                 <button 
@@ -218,6 +278,16 @@ const App: React.FC = () => {
         </div>
       </header>
 
+      {/* Forex Marquee */}
+      <ForexMarquee t={t} />
+
+      {/* Currency Converter Modal */}
+      <CurrencyConverterModal 
+         isOpen={showConverterModal} 
+         onClose={() => setShowConverterModal(false)} 
+         t={t} 
+      />
+
       {/* View Router */}
       {currentView === 'stream' ? (
           <GlobalStreamView 
@@ -231,6 +301,21 @@ const App: React.FC = () => {
           <LogisticsMonitor 
               items={transportData} 
               t={t} 
+              onClose={() => setCurrentView('dashboard')}
+          />
+      ) : currentView === 'raw' ? (
+          <RawDataView 
+              transactions={transactions}
+              flights={flights}
+              transport={transportData}
+              trends={microTrends}
+              t={t}
+              onClose={() => setCurrentView('dashboard')}
+          />
+      ) : currentView === 'xray' ? (
+          <XRayView 
+              signals={deepSignals}
+              t={t}
               onClose={() => setCurrentView('dashboard')}
           />
       ) : (
@@ -304,12 +389,10 @@ const App: React.FC = () => {
                  </ChartContainer>
               </div>
 
-               {/* If no analysis yet, placeholder or map visualization area */}
-               {!analysis.text && (
-                 <div className="shrink-0 h-[100px] flex items-center justify-center border border-dashed border-slate-800 rounded-xl text-slate-500 text-sm">
-                    {t.placeholder}
-                 </div>
-               )}
+               {/* Bottom Row: Summit Alerts (Replacing placeholder) */}
+               <div className="h-[200px] shrink-0">
+                  <SummitAlertsWidget alerts={newsAlerts} t={t} />
+               </div>
             </div>
           </main>
       )}
