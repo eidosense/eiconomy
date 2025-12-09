@@ -1,0 +1,7 @@
+{
+  "name": "MNE Real Economy Meter",
+  "description": "A real-time micro-economic dashboard tracking mall traffic, POS transaction density, and tourist influx to provide actionable insights for Retail and FMCG sectors.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
