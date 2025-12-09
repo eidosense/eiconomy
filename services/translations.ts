@@ -117,7 +117,15 @@ export const translations = {
         realEstate: "CAPITAL FLOW",
         digital: "DIGITAL HEATMAP",
         talent: "HUMAN CAPITAL",
-        signal: "SIGNAL"
+        signal: "SIGNAL",
+        breakdown: {
+            title: "Sentiment Intelligence",
+            sources: "Data Sources / Platforms",
+            keywords: "Contextual Keywords",
+            platform: "Platform",
+            volume: "Mentions/Vol",
+            score: "Sentiment Score"
+        }
     },
     summit: {
         title: "Summit Alerts",
@@ -245,7 +253,15 @@ export const translations = {
         realEstate: "TOK KAPITALA",
         digital: "DIGITALNI HEATMAP",
         talent: "LJUDSKI KAPITAL",
-        signal: "SIGNAL"
+        signal: "SIGNAL",
+        breakdown: {
+            title: "Sentiment Inteligencija",
+            sources: "Izvori Podataka / Platforme",
+            keywords: "Kontekstualne Ključne Riječi",
+            platform: "Platforma",
+            volume: "Pominjanja/Vol",
+            score: "Sentiment Skor"
+        }
     },
     summit: {
         title: "Summit Alerts",

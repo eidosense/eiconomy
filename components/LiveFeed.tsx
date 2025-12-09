@@ -282,7 +282,97 @@ interface XRayViewProps {
     onClose: () => void;
 }
 
+// Sentiment Modal
+const SentimentAnalysisModal: React.FC<{ signal: DeepSignal; onClose: () => void; t: Translation }> = ({ signal, onClose, t }) => {
+    // Mock Breakdown Data (Simulated)
+    const mockData = [
+        { platform: 'Instagram', volume: '12.4k', growth: '+12%', sentiment: 85, color: 'text-rose-400', bar: 'bg-rose-500' },
+        { platform: 'TikTok', volume: '8.1k', growth: '+45%', sentiment: 62, color: 'text-cyan-400', bar: 'bg-cyan-500' },
+        { platform: 'Google Search', volume: '45.2k', growth: '+8%', sentiment: 78, color: 'text-blue-400', bar: 'bg-blue-500' },
+        { platform: 'TripAdvisor', volume: '2.3k', growth: '-2%', sentiment: 91, color: 'text-emerald-400', bar: 'bg-emerald-500' },
+    ];
+
+    const keywords = ["#MontenegroSummer", "LuxuryYacht", "BudvaOldTown", "AmanResort", "KotorCats", "TivatAirport", "BeachLife"];
+
+    return (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in zoom-in duration-200">
+            <div className="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                 <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950">
+                    <div>
+                         <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                            <span className="text-purple-400">●</span> {t.xray.breakdown.title}
+                        </h3>
+                        <p className="text-xs text-slate-500">{signal.title} • {signal.details}</p>
+                    </div>
+                    <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <div className="p-6 overflow-y-auto space-y-6">
+                    {/* Signal Summary */}
+                    <div className="flex gap-4 p-4 bg-purple-900/10 border border-purple-500/20 rounded-lg">
+                        <div className="flex-1">
+                            <div className="text-xs text-slate-400 uppercase tracking-wider">{t.xray.signal}</div>
+                            <div className="text-2xl font-bold text-white">{signal.value}</div>
+                        </div>
+                        <div className="flex-1 text-right">
+                             <div className="text-xs text-slate-400 uppercase tracking-wider">{t.xray.breakdown.score}</div>
+                             <div className={`text-2xl font-bold ${signal.sentiment === 'positive' ? 'text-emerald-400' : 'text-slate-200'}`}>{signal.delta}</div>
+                        </div>
+                    </div>
+
+                    {/* Breakdown Table */}
+                    <div>
+                        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">{t.xray.breakdown.sources}</h4>
+                        <div className="space-y-3">
+                            <div className="grid grid-cols-12 text-[10px] text-slate-600 uppercase font-bold px-2">
+                                <div className="col-span-4">{t.xray.breakdown.platform}</div>
+                                <div className="col-span-5">{t.xray.breakdown.volume}</div>
+                                <div className="col-span-3 text-right">{t.xray.breakdown.score}</div>
+                            </div>
+                            {mockData.map((d) => (
+                                <div key={d.platform} className="bg-slate-950/50 p-3 rounded border border-slate-800/50 grid grid-cols-12 items-center">
+                                    <div className={`col-span-4 text-sm font-bold ${d.color}`}>{d.platform}</div>
+                                    <div className="col-span-5 pr-4">
+                                        <div className="flex justify-between text-xs text-slate-400 mb-1">
+                                            <span>{d.volume}</span>
+                                            <span className="text-slate-500">{d.growth}</span>
+                                        </div>
+                                        <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                            <div className={`h-full ${d.bar}`} style={{ width: `${Math.random() * 40 + 40}%` }}></div>
+                                        </div>
+                                    </div>
+                                    <div className="col-span-3 text-right">
+                                        <div className="text-sm font-mono font-bold text-white">{d.sentiment}/100</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Keywords Cloud */}
+                    <div>
+                        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">{t.xray.breakdown.keywords}</h4>
+                        <div className="flex flex-wrap gap-2">
+                            {keywords.map(kw => (
+                                <span key={kw} className="px-2 py-1 bg-slate-800 text-slate-300 text-xs rounded border border-slate-700">
+                                    {kw}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
 export const XRayView: React.FC<XRayViewProps> = ({ signals, t, onClose }) => {
+    const [selectedSignal, setSelectedSignal] = useState<DeepSignal | null>(null);
     const recentSignals = signals.slice(0, 50);
 
     const getCategoryColor = (cat: SignalCategory) => {
@@ -339,7 +429,15 @@ export const XRayView: React.FC<XRayViewProps> = ({ signals, t, onClose }) => {
                                 </h3>
                                 
                                 {catSignals.map(signal => (
-                                    <div key={signal.id} className="bg-slate-900/40 border border-slate-800 hover:border-slate-600 transition-colors p-4 rounded-sm relative group overflow-hidden">
+                                    <div 
+                                        key={signal.id} 
+                                        onClick={() => {
+                                            if (signal.category === 'SOCIAL') {
+                                                setSelectedSignal(signal);
+                                            }
+                                        }}
+                                        className={`bg-slate-900/40 border border-slate-800 hover:border-slate-600 transition-colors p-4 rounded-sm relative group overflow-hidden ${signal.category === 'SOCIAL' ? 'cursor-pointer hover:bg-slate-800/60 ring-0 hover:ring-1 hover:ring-purple-500/40' : ''}`}
+                                    >
                                         {/* Scanline effect */}
                                         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent via-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 animate-pulse pointer-events-none"></div>
                                         
@@ -374,6 +472,15 @@ export const XRayView: React.FC<XRayViewProps> = ({ signals, t, onClose }) => {
                     })}
                  </div>
              </div>
+
+             {/* Detail Modal */}
+             {selectedSignal && (
+                <SentimentAnalysisModal 
+                    signal={selectedSignal} 
+                    onClose={() => setSelectedSignal(null)} 
+                    t={t} 
+                />
+             )}
         </div>
     );
 };
