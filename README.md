@@ -1,20 +1,16 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# 📊 Eiconomy
 
-# Run and deploy your AI Studio app
+**Live App:** [eiconomy.com](https://eiconomy.com)
 
-This contains everything you need to run your app locally.
+An AI-driven economic and financial intelligence web application delivering structured analytical workflows and interactive insights.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1R8sinYSQf6mNfGGrCbEGzSje6HN3dhq8
+### Key Capabilities
+- **Automated Financial & Economic Synthesis:** Transforms complex economic indicators and inputs into clear, actionable insights.
+- **Responsive Product UI:** High-speed, component-driven interface built for seamless user exploration.
 
-## Run Locally
+### Tech Stack
+- **Frontend & Core:** TypeScript, Next.js, React, Tailwind CSS
+- **AI Layer:** Generative AI APIs, Structured Prompt Pipelines
 
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+---
+*Built by [Arya Yildirim](https://github.com/eidosense) — AI Engineer & Forward Deployed Engineer*
